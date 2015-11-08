@@ -1,9 +1,10 @@
 import pygame as pg
 
-class Player(pg.sprite.Sprite):
+class Enemy(pg.sprite.Sprite):
 
     """Class representing our player."""
     def __init__(self,location):
+        pg.sprite.Sprite.__init__(self)
         self.health = 10
         self.image = pg.image.load("base_face.png").convert_alpha()
         self.mask = pg.mask.from_surface(self.image)

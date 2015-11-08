@@ -3,10 +3,10 @@ import sys
 import random
 import Player
 import pygame as pg
+import Room
 
 CAPTION = "Basic Platforming: Pixel Perfect Collision"
-SCREEN_SIZE = (700, 500)
-BACKGROUND_COLOR = (50, 50, 50)
+SCREEN_SIZE = (1000, 750)
 
 
 
@@ -20,27 +20,17 @@ class Control(object):
         self.keys = pg.key.get_pressed()
         self.done = False
         self.player = Player.Player((350,250))
-        self.obstacles = self.make_obstacles()
+        self.room = Room.Room()
+        self.obstacles = self.room.make_obstacles()
 
-    def make_obstacles(self):
-        """Adds some arbitrarily placed obstacles to a sprite.Group."""
-        # obstacles = [Block((400,400)), Block((300,270)), Block((150,170))]
-        # obstacles += [Block((500+50*i,220)) for i in range(3)]
-        # for i in range(12):
-        #     obstacles.append(Block((50+i*50,450)))
-        #     obstacles.append(Block((100+i*50,0)))
-        #     obstacles.append(Block((0,50*i)))
-        #     obstacles.append(Block((650,50*i)))
-        # return pg.sprite.Group(obstacles)
+
 
     def event_loop(self):
         """We can always quit, and the player can sometimes jump."""
         for event in pg.event.get():
             if event.type == pg.QUIT or self.keys[pg.K_ESCAPE]:
                 self.done = True
-            elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_SPACE:
-                    self.player.jump()
+
 
     def update(self):
         """Update held keys and the player."""
@@ -49,8 +39,7 @@ class Control(object):
 
     def draw(self):
         """Draw all necessary objects to the display surface."""
-        self.screen.fill(BACKGROUND_COLOR)
-        # self.obstacles.draw(self.screen)
+        self.room.draw(self.screen)
         self.player.draw(self.screen)
 
     def display_fps(self):
