@@ -32,18 +32,20 @@ class Door(Wall,pg.sprite.Sprite):
 class Room(pg.sprite.Sprite):
     def make_obstacles(self):
 
-        walls = [Wall(pg.Color("chocolate"), (0,0,20,750)),
+        self.walls = [Wall(pg.Color("chocolate"), (0,0,20,750)),
                  Wall(pg.Color("chocolate"), (980,0,20,750)),
                  Wall(pg.Color("chocolate"), (0,0,1000,20)),
                  Wall(pg.Color("chocolate"), (0,730,1000,20)),
                 ]
 
-        doors = [Door(pg.Color("red"),(0,310,25,50))]
+        self.doors = [Door(pg.Color("red"),(0,310,25,50))]
 
-        enemies = [Enemy.Enemy((75,75)),
+        self.enemies = [Enemy.Enemy((18,18)),
                    Enemy.Enemy((450,475))
                    ]
-        return pg.sprite.Group(walls, doors,enemies)
+        self.obstacles = pg.sprite.Group(self.walls, self.doors,self.enemies)
+        self.enemy_concern = pg.sprite.Group(self.walls, self.doors)
+        return self.obstacles
 
     def draw(self, surface):
         self.room_color = (50, 50, 50)
@@ -52,3 +54,8 @@ class Room(pg.sprite.Sprite):
 
     def __init__(self):
         self.obstacles = self.make_obstacles()
+
+    def update(self,player):
+        self.enemy_concern = pg.sprite.Group(self.enemy_concern,player)
+        for enemy in self.enemies:
+            enemy.update(self.enemy_concern,player)

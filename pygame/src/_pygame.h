@@ -169,7 +169,8 @@ typedef struct pg_bufferinfo_s {
     pybuffer_releaseproc release_buffer;
 } Pg_buffer;
 
-/* Operating system specific adjustments
+/* Operating system
+ecific adjustments
  */
 // No signal()
 #if defined(__SYMBIAN32__) && defined(HAVE_SIGNAL_H)

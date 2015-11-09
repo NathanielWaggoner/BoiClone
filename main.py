@@ -8,8 +8,6 @@ import Room
 CAPTION = "Basic Platforming: Pixel Perfect Collision"
 SCREEN_SIZE = (1000, 750)
 
-
-
 class Control(object):
     """Class for managing event loop and game states."""
     def __init__(self):
@@ -23,19 +21,17 @@ class Control(object):
         self.room = Room.Room()
         self.obstacles = self.room.make_obstacles()
 
-
-
     def event_loop(self):
         """We can always quit, and the player can sometimes jump."""
         for event in pg.event.get():
             if event.type == pg.QUIT or self.keys[pg.K_ESCAPE]:
                 self.done = True
 
-
     def update(self):
         """Update held keys and the player."""
         self.keys = pg.key.get_pressed()
         self.player.update(self.obstacles, self.keys)
+        self.room.update(self.player)
 
     def draw(self):
         """Draw all necessary objects to the display surface."""

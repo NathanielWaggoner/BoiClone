@@ -1,6 +1,6 @@
 import pygame as pg
-import Physics
 import time
+import random as r
 
 class _Physics(object):
     """
@@ -35,13 +35,31 @@ class PlayerShot(object):
         self.image = pg.image.load("projectile.png").convert_alpha()
         self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=location)
+        self.key = time.time()
+        self.age = .5
 
-    def update(self):
+    def update(self,to_remove,objstacles):
         self.rect.move_ip(self.x_vel*self.speed,self.y_vel*self.speed)
 
-    def check_collisions(self, offset, index, obstacles):
+        update = time.time();
+
+        # check if this projectile has gone stale
+        if update-self.key>self.age:
+            to_remove.append(self.key)
+
+        if self.check_collisions(self.y_vel,self.x_vel,1,objstacles):
+            to_remove.append(self.key)
+
+    def check_collisions(self, offset_y,offset_x, index, obstacles):
         unaltered = True
-        self.rect.move_ip(offset)
+        self.rect.move_ip(offset_x,offset_y)
+        collisions = pg.sprite.spritecollide(self, obstacles, False)
+        collidable = pg.sprite.collide_mask
+        if not pg.sprite.spritecollideany(self, collisions, collidable):
+            return False
+        return True
+
+
 
 
 class Player(_Physics, pg.sprite.Sprite):
@@ -63,7 +81,7 @@ class Player(_Physics, pg.sprite.Sprite):
         self.moving_x = False
         self.firing_x = 0
         self.firing_y = 0
-        self.projectiles = []
+        self.projectiles = dict()
         self.last_fire = time.time()
 
         self.trinkets = []
@@ -72,9 +90,9 @@ class Player(_Physics, pg.sprite.Sprite):
 
         self.health = 3
         self.fire_rate = .5
-        self.shot_speed = 5;
-        self.damage = 1
-        self.speed = 4
+        self.shot_speed = 20;
+        self.damage = 5
+        self.speed = 10
 
 
         self.rect = self.image.get_rect(topleft=location)
@@ -95,7 +113,6 @@ class Player(_Physics, pg.sprite.Sprite):
 
     def check_falling(self, obstacles):
         """If player is not contacting the ground, enter fall state."""
-
         # self.rect.move_ip((0,1))
         # collisions = pg.sprite.spritecollide(self, obstacles, False)
         # collidable = pg.sprite.collide_mask
@@ -173,7 +190,8 @@ class Player(_Physics, pg.sprite.Sprite):
         if isFiringX or isFiringY:
 
             if (time.time() - self.last_fire) > self.fire_rate:
-                self.projectiles.append(PlayerShot(self.rect.topleft,self.firing_x,self.firing_y,self.shot_speed,self.damage))
+                shot = PlayerShot(self.rect.topleft,self.firing_x,self.firing_y,self.shot_speed,self.damage)
+                self.projectiles[shot.key] = shot
                 self.last_fire = time.time()
 
     def jump(self):
@@ -183,12 +201,18 @@ class Player(_Physics, pg.sprite.Sprite):
         """Everything we need to stay updated."""
         self.check_keys(keys)
         self.get_position(obstacles)
-        for proj in self.projectiles:
-            proj.update()
+
+        to_remove = []
+        for proj in self.projectiles.values():
+            proj.update(to_remove,obstacles)
+
+        for key in to_remove:
+            self.projectiles.pop(key)
+
         self.physics_update()
 
     def draw(self,surface):
         """Blit the player to the target surface."""
         surface.blit(self.image, self.rect)
-        for proj in self.projectiles:
+        for proj in self.projectiles.values():
             surface.blit(proj.image,proj.rect)
