@@ -68,11 +68,25 @@ class BouncyShot(Shot):
         Shot.__init__(self,location,x_vel,y_vel,shot_speed,damage,parent,now)
 
     def handle_wall_collision(self, collision,now):
-        pg.sprite.spritecollide
-        if self.x_vel != 0:
-             self.x_vel = -self.x_vel
-        if self.y_vel != 0:
-             self.y_vel = -self.y_vel
+        ## are we coming from left/right/above or below?
+        ## handle each case correctly
+        # coming from left:
+        if self.x_vel > 0:
+            if self.rect.x < collision.rect.x+collision.rect.width:
+                self.x_vel = -self.x_vel
+        # coming from right
+        elif self.x_vel < 0:
+             if self.rect.x > collision.rect.x:
+                  self.x_vel = -self.x_vel
+
+        if self.y_vel > 0:
+            if self.rect.y < collision.rect.y+collision.rect.height:
+                self.y_vel = -self.y_vel
+
+        elif self.y_vel < 0:
+            if self.rect.y < collision.rect.y:
+                self.y_vel = -self.y_vel
+
         return True
 
 class ExplodingShot(BouncyShot):

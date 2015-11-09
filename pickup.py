@@ -2,6 +2,7 @@ import pygame as pg
 
 PICKUP = "PICKUP"
 HEALTH_PICKUP = "HEALTH"
+FunkyPickup = "FUNKY"
 
 class Pickup(pg.sprite.Sprite):
 
@@ -30,7 +31,7 @@ class HealthPickup(Pickup):
 class FunkyPickup(Pickup):
 
     def __init__(self,location):
-        Pickup.__init__(self,location,"funky_pickup.png",HEALTH_PICKUP)
+        Pickup.__init__(self,location,"funky_pickup.png",FunkyPickup)
         self.shot_freq_mult = .7
 
     def bePickedUp(self,consumer):

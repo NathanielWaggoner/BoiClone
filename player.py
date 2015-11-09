@@ -51,15 +51,6 @@ class Player(pg.sprite.Sprite):
     def move_y(self):
         self.rect.move_ip(0,self.y_vel)
 
-    def check_falling(self, obstacles):
-        """If player is not contacting the ground, enter fall state."""
-        # self.rect.move_ip((0,1))
-        # collisions = pg.sprite.spritecollide(self, obstacles, False)
-        # collidable = pg.sprite.collide_mask
-        # if not pg.sprite.spritecollideany(self, collisions, collidable):
-        #     self.fall = True
-        # self.rect.move_ip((0,-1))
-
     def check_collisions(self, offset, index, obstacles):
         """
         This function checks if a collision would occur after moving offset
@@ -161,5 +152,5 @@ class Player(pg.sprite.Sprite):
 
     def take_damage(self,projectile):
         self.health -= projectile.damage
-        if(self.health <=0):
+        if self.health <=0:
             self.kill()
