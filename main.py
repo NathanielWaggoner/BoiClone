@@ -1,9 +1,9 @@
 import os
 import sys
 import random
-import Player
+import player
 import pygame as pg
-import Room
+import room
 
 CAPTION = "Basic Platforming: Pixel Perfect Collision"
 SCREEN_SIZE = (1000, 750)
@@ -17,8 +17,8 @@ class Control(object):
         self.fps = 60.0
         self.keys = pg.key.get_pressed()
         self.done = False
-        self.player = Player.Player((350,250))
-        self.room = Room.Room()
+        self.player = player.Player((350,250))
+        self.room = room.Room()
         self.obstacles = self.room.make_obstacles()
 
     def event_loop(self):

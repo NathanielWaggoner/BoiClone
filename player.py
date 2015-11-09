@@ -36,7 +36,7 @@ class PlayerShot(object):
         self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=location)
         self.key = time.time()
-        self.age = .5
+        self.age = 2
 
     def update(self,to_remove,objstacles):
         self.rect.move_ip(self.x_vel*self.speed,self.y_vel*self.speed)
@@ -56,6 +56,9 @@ class PlayerShot(object):
         collisions = pg.sprite.spritecollide(self, obstacles, False)
         collidable = pg.sprite.collide_mask
         if not pg.sprite.spritecollideany(self, collisions, collidable):
+            for coll in collisions:
+                if coll.type == 'enemy':
+                    coll.take_damage(self)
             return False
         return True
 
@@ -90,20 +93,21 @@ class Player(_Physics, pg.sprite.Sprite):
 
         self.health = 3
         self.fire_rate = .5
-        self.shot_speed = 20;
+        self.shot_speed = 10;
         self.damage = 5
-        self.speed = 10
+        self.speed = 5
 
 
         self.rect = self.image.get_rect(topleft=location)
 
     def get_position(self, obstacles):
         """Calculate the player's position this frame, including collisions."""
-        self.canMove = self.check_collisions((0,self.y_vel), 1, obstacles)
-        if self.x_vel:
-            self.move_x()
-        if self.y_vel:
-            self.move_y()
+        self.can_move = self.check_collisions((self.x_vel,self.y_vel), 1, obstacles)
+        if self.can_move:
+            if self.x_vel:
+                self.move_x()
+            if self.y_vel:
+                self.move_y()
 
     def move_x(self):
         self.rect.move_ip(self.x_vel,0)
@@ -127,14 +131,14 @@ class Player(_Physics, pg.sprite.Sprite):
         pixel and retested. This continues until we find exactly how far we can
         safely move, or we decide we can't move.
         """
-        # unaltered = True
-        # self.rect.move_ip(offset)
-        # collisions = pg.sprite.spritecollide(self, obstacles, False)
-        # collidable = pg.sprite.collide_mask
-        # while pg.sprite.spritecollideany(self, collisions, collidable):
-        #     self.rect[index] += (1 if offset[index]<0 else -1)
-        #     unaltered = False
-        # return unaltered
+        unaltered = True
+        self.rect.move_ip(offset)
+        collisions = pg.sprite.spritecollide(self, obstacles, False)
+        collidable = pg.sprite.collide_mask
+        if len(collisions) >0:
+            unaltered = False
+        self.rect.move_ip((-offset[0],-offset[1]))
+        return unaltered
 
     def check_keys(self, keys):
         """Find the player's self.x_vel based on currently held keys."""

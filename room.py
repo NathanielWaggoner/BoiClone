@@ -57,5 +57,11 @@ class Room(pg.sprite.Sprite):
 
     def update(self,player):
         self.enemy_concern = pg.sprite.Group(self.enemy_concern,player)
+        toremove = []
         for enemy in self.enemies:
             enemy.update(self.enemy_concern,player)
+            if enemy.health<=0:
+                toremove.append(enemy)
+
+        for dead in toremove:
+            self.enemies.remove(dead)

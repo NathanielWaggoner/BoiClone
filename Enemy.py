@@ -7,7 +7,7 @@ class Enemy(pg.sprite.Sprite):
     def __init__(self,location):
         pg.sprite.Sprite.__init__(self)
         self.health = 10
-        self.speed = 10
+        self.speed = 3
         self.damage = 5
         self.shots = False
         self.image = pg.image.load("base_face.png").convert_alpha()
@@ -17,6 +17,7 @@ class Enemy(pg.sprite.Sprite):
         self.move_change_rate = 1
         self.force_new_move = False
         self.movement = (0,0)
+        self.type = 'enemy'
 
     def draw(self,surface):
         """Blit the player to the target surface."""
@@ -47,13 +48,19 @@ class Enemy(pg.sprite.Sprite):
         if(len(collisions)>0):
             unaltered = False
             self.force_new_move = True
-
-            while pg.sprite.spritecollideany(self, collisions, collidable):
+            count = 0
+            while count < self.speed and pg.sprite.spritecollideany(self, collisions, collidable):
                 delta_x = (1 if dir[0] < 0 else -1 if dir[0] > 0 else 0)
                 delta_y += (1 if dir[1] < 0 else -1 if dir[1] > 0 else 0)
                 self.rect[0] += delta_x
                 self.rect[1] += delta_y
+                count += 1
             self.movement = (delta_x,delta_y)
 
         self.rect.move_ip(-dir[0],-dir[1])
         return unaltered
+
+    def take_damage(self,projectile):
+        self.health -= projectile.damage
+        if self.health <=0:
+            self.kill()
