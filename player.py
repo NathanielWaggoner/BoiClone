@@ -1,72 +1,11 @@
 import pygame as pg
 import time
-import random as r
+import shot
+import pickup
 
-class _Physics(object):
-    """
-    A simplified physics class. Using a 'real' gravity function here, though
-    it is questionable whether or not it is worth the effort. Compare to the
-    effect of gravity in fall_rect and decide for yourself.
-    """
-    def __init__(self):
-        """You can experiment with different gravity here."""
-        self.x_vel = self.y_vel = self.y_vel_i = 0
-        self.grav = 20
-        self.time = None
+PLAYER_TYPE = 'player'
 
-    def physics_update(self):
-        """If the player is falling, calculate current y velocity."""
-        # if self.canMove:
-        #     time_now = pg.time.get_ticks()
-        #     if not self.time:
-        #         self.time = time_now
-        #     self.y_vel = self.grav*((time_now-self.time)/1000.0)+self.y_vel_i
-        # else:
-        #     self.time = None
-        #     self.y_vel = self.y_vel_i = 0
-        self.y_vel
-
-class PlayerShot(object):
-    def __init__(self,location, x_vel, y_vel, shot_speed, damage):
-        self.x_vel = x_vel
-        self.y_vel = y_vel
-        self.speed = shot_speed
-        self.damage = damage
-        self.image = pg.image.load("projectile.png").convert_alpha()
-        self.mask = pg.mask.from_surface(self.image)
-        self.rect = self.image.get_rect(topleft=location)
-        self.key = time.time()
-        self.age = 2
-
-    def update(self,to_remove,objstacles):
-        self.rect.move_ip(self.x_vel*self.speed,self.y_vel*self.speed)
-
-        update = time.time();
-
-        # check if this projectile has gone stale
-        if update-self.key>self.age:
-            to_remove.append(self.key)
-
-        if self.check_collisions(self.y_vel,self.x_vel,1,objstacles):
-            to_remove.append(self.key)
-
-    def check_collisions(self, offset_y,offset_x, index, obstacles):
-        unaltered = True
-        self.rect.move_ip(offset_x,offset_y)
-        collisions = pg.sprite.spritecollide(self, obstacles, False)
-        collidable = pg.sprite.collide_mask
-        if not pg.sprite.spritecollideany(self, collisions, collidable):
-            for coll in collisions:
-                if coll.type == 'enemy':
-                    coll.take_damage(self)
-            return False
-        return True
-
-
-
-
-class Player(_Physics, pg.sprite.Sprite):
-
+class Player(pg.sprite.Sprite):
 
     """Class representing our player."""
     def __init__(self,location):
@@ -74,7 +13,6 @@ class Player(_Physics, pg.sprite.Sprite):
         The location is an (x,y) coordinate pair, and speed is the player's
         speed in pixels per frame. Speed should be an integer.
         """
-        _Physics.__init__(self)
         pg.sprite.Sprite.__init__(self)
         self.image = pg.image.load("base_face.png").convert_alpha()
         self.mask = pg.mask.from_surface(self.image)
@@ -86,18 +24,16 @@ class Player(_Physics, pg.sprite.Sprite):
         self.firing_y = 0
         self.projectiles = dict()
         self.last_fire = time.time()
-
+        self.type = 'player'
         self.trinkets = []
         self.items = []
         self.consumables = []
-
+        self.type = PLAYER_TYPE
         self.health = 3
         self.fire_rate = .5
         self.shot_speed = 10;
         self.damage = 5
         self.speed = 5
-
-
         self.rect = self.image.get_rect(topleft=location)
 
     def get_position(self, obstacles):
@@ -127,7 +63,7 @@ class Player(_Physics, pg.sprite.Sprite):
     def check_collisions(self, offset, index, obstacles):
         """
         This function checks if a collision would occur after moving offset
-        pixels.  If a collision is detected position is decremented by one
+        pixels.  If a collision is detected position is decremented PLAYER_TYPEby one
         pixel and retested. This continues until we find exactly how far we can
         safely move, or we decide we can't move.
         """
@@ -136,13 +72,17 @@ class Player(_Physics, pg.sprite.Sprite):
         collisions = pg.sprite.spritecollide(self, obstacles, False)
         collidable = pg.sprite.collide_mask
         if len(collisions) >0:
+            for coll in collisions:
+                if coll.type == pickup.PICKUP:
+                    coll.bePickedUp(self)
             unaltered = False
         self.rect.move_ip((-offset[0],-offset[1]))
         return unaltered
 
-    def check_keys(self, keys):
+    def check_keys(self, keys,now):
         """Find the player's self.x_vel based on currently held keys."""
         self.x_vel = 0
+        self.y_vel = 0
         self.moving_x= False
         self.moving_y= False
         if keys[pg.K_a]:
@@ -153,10 +93,10 @@ class Player(_Physics, pg.sprite.Sprite):
             self.moving_x = True
 
         if keys[pg.K_s]:
-            self.y_vel += 1
+            self.y_vel += self.speed
             self.moving_y = True
-        if keys[pg.K_UP] or keys[pg.K_w]:
-            self.y_vel -= 1
+        if keys[pg.K_w]:
+            self.y_vel -= self.speed
             self.moving_y = True
 
         if not self.moving_y:
@@ -164,9 +104,9 @@ class Player(_Physics, pg.sprite.Sprite):
         if not self.moving_x:
             self.x_vel = 0;
 
-        self.determine_fire_direction(keys)
+        self.determine_fire_direction(keys, now)
 
-    def determine_fire_direction(self, keys):
+    def determine_fire_direction(self, keys, now):
 
         isFiringX= False
         isFiringY = False
@@ -194,29 +134,32 @@ class Player(_Physics, pg.sprite.Sprite):
         if isFiringX or isFiringY:
 
             if (time.time() - self.last_fire) > self.fire_rate:
-                shot = PlayerShot(self.rect.topleft,self.firing_x,self.firing_y,self.shot_speed,self.damage)
-                self.projectiles[shot.key] = shot
+                mShot = shot.BouncyShot(self.rect.topleft,self.firing_x,self.firing_y,self.shot_speed,self.damage,PLAYER_TYPE,now)
+                self.projectiles[mShot.key] = mShot
                 self.last_fire = time.time()
 
     def jump(self):
         """Called when the user presses the jump button."""
 
-    def update(self, obstacles, keys):
+    def update(self, obstacles, keys, now):
         """Everything we need to stay updated."""
-        self.check_keys(keys)
+        self.check_keys(keys,now)
         self.get_position(obstacles)
 
         to_remove = []
         for proj in self.projectiles.values():
-            proj.update(to_remove,obstacles)
+            proj.update(to_remove,obstacles,now)
 
         for key in to_remove:
             self.projectiles.pop(key)
-
-        self.physics_update()
 
     def draw(self,surface):
         """Blit the player to the target surface."""
         surface.blit(self.image, self.rect)
         for proj in self.projectiles.values():
-            surface.blit(proj.image,proj.rect)
+            proj.draw(surface)
+
+    def take_damage(self,projectile):
+        self.health -= projectile.damage
+        if(self.health <=0):
+            self.kill()
